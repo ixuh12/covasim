@@ -881,7 +881,7 @@ class Scenarios(cvb.ParsObj):
         # For this object, metapars are the foundation
         default_pars = make_metapars() # Start with default pars
         super().__init__(default_pars) # Initialize and set the parameters as attributes
-        cvb.set_metadata(self) # Set version, date, and git info
+        Facade().set_metadata(self) # Set version, date, and git info
 
         # Handle filename
         if scenfile is None:
@@ -901,7 +901,7 @@ class Scenarios(cvb.ParsObj):
 
         # Create the simulation and handle basepars
         if sim is None:
-            sim = cvs.Sim()
+            sim = Facade().Sim()
         self.base_sim = sc.dcp(sim)
         self.basepars = sc.dcp(sc.mergedicts(basepars))
         self.base_sim.update_pars(self.basepars)
@@ -1099,7 +1099,7 @@ class Scenarios(cvb.ParsObj):
             scens.run()
             scens.plot()
         '''
-        fig = cvplt.plot_scens(scens=self, *args, **kwargs)
+        fig = Facade().plot_scens(scens=self, *args, **kwargs)
         return fig
 
 
@@ -1202,7 +1202,7 @@ class Scenarios(cvb.ParsObj):
                     for sim in sims[key]:
                         obj.sims[key].append(sim.shrink(in_place=False))
 
-        cvm.save(filename=scenfile, obj=obj) # Actually save
+        Facade().save(filename=scenfile, obj=obj) # Actually save
 
         self.sims = sims # Restore
         return scenfile
@@ -1224,7 +1224,7 @@ class Scenarios(cvb.ParsObj):
 
             scens = cv.Scenarios.load('my-scenarios.scens')
         '''
-        scens = cvm.load(scenfile, *args, **kwargs)
+        scens = Facade().load(scenfile, *args, **kwargs)
         if not isinstance(scens, Scenarios):
             errormsg = f'Cannot load object of {type(scens)} as a Scenarios object'
             raise TypeError(errormsg)
@@ -1496,3 +1496,19 @@ Alternatively, to run without multiprocessing, set parallel=False.
             sims.append(sim)
 
     return sims
+
+class Facade():
+    def save(filename, obj):
+        return cvm.save(filename, obj)
+    
+    def load(scenfile, *args, **kwargs):
+        return cvm.load(scenfile, *args, **kwargs)
+
+    def set_metadata(arg):
+        return cvb.set_metadata(arg)
+
+    def Sim():
+        return cvs.Sim()
+    
+    def plot_scens(scens, *args, **kwargs):
+        return cvplt.plot_scens(scens, *args, **kwargs)
